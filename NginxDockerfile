@@ -1,0 +1,35 @@
+FROM centos
+LABEL author="guo"
+LABEL email="<guolejian@126.com>"
+
+ENV MYPATH /usr/local
+WORKDIR ${MYPATH}
+
+# 安装编译nginx插件
+RUN yum -y install gcc zlib zlib-devel pcre-devel openssl openssl-devel
+RUN yum -y install gcc automake autoconf libtool make
+RUN yum -y install gcc gcc-c++
+
+# 复制并解压
+ADD nginx-1.16.1.tar.gz ${MYPATH}
+
+# 编译nginx
+RUN cd ${MYPATH}/nginx-1.16.1 \
+    && ./configure --prefix=/usr/local/nginx \
+    && make && make install
+
+ENV PATH ${MYPATH}/nginx/sbin:$PATH
+# 安装工具
+RUN yum -y install net-tools
+RUN yum -y install vim
+
+# 暴露端口号
+EXPOSE 80
+
+# CMD ["sh", " /usr/local/nginx/sbin/nginx"]
+# CMD sh /usr/local/nginx/sbin/nginx
+# CMD cd /usr/local/nginx/sbin/ && ./nginx
+ENTRYPOINT [ "nginx" ]
+CMD ["-g", "daemon off;"]
+# 当ENTRYPOINT和CMD连用时，CMD的命令是ENTRYPOINT命令的参数，两者连用相当于nginx -g "daemon off;"而当一起连用的时候命令格式最好一致
+# docker run --name mynginx -d -p 8123:80 mynginx
